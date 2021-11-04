@@ -632,8 +632,27 @@ void DABlinGTK::UpdateAnnouncementSupport(const LISTED_SERVICE& service) {
 			if(it->second.subchid == service.audio_service.subchid) {
 				asw_color = "yellow";
 			} else {
-				if(asw_color.empty())
-					asw_color = "cyan";
+				// get the new subchannel ID from the combolist
+				Gtk::ListStore::Children children = combo_services_liststore->children();
+				Gtk::ListStore::iterator row_it = std::find_if(
+						children.begin(), children.end(),
+						[&](const Gtk::TreeModel::Row &row)->bool {
+							const LISTED_SERVICE &ls = (LISTED_SERVICE) row[combo_services_cols.col_service];
+							return ls.audio_service.subchid == it->second.subchid;
+						}
+				);
+
+				if (row_it != children.end()) {
+					// switch to the target subchannel
+					combo_services.set_active(row_it);
+				} else {
+					// unable to find subchannel, display the announcement in a different color
+					if (asw_color.empty())
+						asw_color = "cyan";
+					continue;
+				}
+
+				/* TODO disable controls for switching back to other sub-channels */
 			}
 		}
 
